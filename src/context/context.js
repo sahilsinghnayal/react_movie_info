@@ -2,11 +2,13 @@ import React, { useContext, useEffect, useState } from "react";
 
 const AppContext = React.createContext();
 
-const API_URL=`http://www.omdbapi.com/?i=tt3896198&apikey=cf21cc95&s=titanic`;
+const API_URL=`http://www.omdbapi.com/?&apikey=${process.env.REACT_APP_KEY}`;
 
 const AppProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [movie, setMovie] = useState([]);
+    const [isError, setIsError] = useState({show:"false",msg:" "});
+    const [query, setQuery] = useState("Avengers")
     const getmovie=async(url)=>{
         try {
             const response= await fetch(url);
@@ -14,7 +16,17 @@ const AppProvider = ({ children }) => {
             console.log(data);
             if(data.Response==="True"){
                 setLoading(false);
-                setMovie(data.search);
+                setMovie(data.Search);
+                setIsError({
+                    show:"false",
+                    msg:data.Error,
+                })
+            }
+            else{
+                setIsError({
+                    show:"true",
+                    msg:data.Error,
+                })
             }
     
             
@@ -25,14 +37,18 @@ const AppProvider = ({ children }) => {
     }
 
     useEffect(() => {
-     getmovie(API_URL)
-    }, [])
+       let Timer= setTimeout(() => {
+            getmovie(`${API_URL}&s=${query}`)
+        }, 1000);
+       return()=> clearInterval(Timer)
+     
+    }, [query])  
+  
     
-  return <AppContext.Provider value="sahil"> {children} </AppContext.Provider>;
+  return <AppContext.Provider value={{loading,movie,isError,query, setQuery}}> {children} </AppContext.Provider>;
 };
 const useGlobalContext = () => {
   return useContext(AppContext);
 };
 export { AppContext, AppProvider, useGlobalContext };
 
-//http://www.omdbapi.com/?apikey=cf21cc95&s=titanic
